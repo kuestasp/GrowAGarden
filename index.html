@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grow a Garden · 1,000,000 in 30 Days Planner</title>
+<style>
+  :root {
+    --bg: #0e1411;
+    --panel: #16201a;
+    --panel-2: #1d2c23;
+    --line: #2a3d30;
+    --text: #e6f0e8;
+    --muted: #8fae9b;
+    --accent: #5fd38a;
+    --accent-2: #ffd86b;
+    --bad: #ff7a6b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  header {
+    padding: 28px 24px 18px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(160deg, #16201a, #0e1411);
+  }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  h1 .sheckle { color: var(--accent-2); }
+  header p { margin: 0; color: var(--muted); }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 24px 60px; }
+  .grid { display: grid; gap: 20px; grid-template-columns: 320px 1fr; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px;
+  }
+  .card h2 { margin: 0 0 14px; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  label { display: block; margin: 12px 0 4px; font-size: 13px; color: var(--muted); }
+  input, select {
+    width: 100%; padding: 9px 10px; background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 8px; font-size: 14px;
+  }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .verdict {
+    margin: 0 0 18px; padding: 16px 18px; border-radius: 12px; font-size: 17px;
+    border: 1px solid var(--line); background: var(--panel);
+  }
+  .verdict.good { border-color: var(--accent); }
+  .verdict.bad { border-color: var(--bad); }
+  .verdict b { font-size: 22px; }
+  .verdict .good-t { color: var(--accent); }
+  .verdict .bad-t { color: var(--bad); }
+  canvas { width: 100%; height: 240px; display: block; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: 11px; background: var(--panel-2); color: var(--muted); }
+  .muted { color: var(--muted); }
+  .num { font-variant-numeric: tabular-nums; }
+  details { margin-top: 16px; }
+  summary { cursor: pointer; color: var(--accent); }
+  footer { color: var(--muted); font-size: 12px; padding: 0 24px 40px; max-width: 1100px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌱 Grow a Garden — <span class="sheckle">1,000,000</span> in 30 Days Planner</h1>
+  <p>Set your starting point, pick a strategy, and see day-by-day whether you actually hit a million Sheckles.</p>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card" id="controls">
+      <h2>Your situation</h2>
+      <label>Starting Sheckles</label>
+      <input id="startBalance" type="number" value="500" min="0" />
+      <label>Garden plots you have now</label>
+      <input id="plots" type="number" value="8" min="1" />
+
+      <h2 style="margin-top:22px">Strategy</h2>
+      <label>Crop to focus</label>
+      <select id="crop"></select>
+
+      <label>Mutation hunting (% of fruit mutated)</label>
+      <input id="mutationFraction" type="number" value="10" min="0" max="100" />
+      <div class="row">
+        <div>
+          <label>Growth mutation</label>
+          <select id="growth"></select>
+        </div>
+        <div>
+          <label>Weather mutation</label>
+          <select id="env"></select>
+        </div>
+      </div>
+
+      <h2 style="margin-top:22px">Expansion</h2>
+      <label>Cost of next plot (0 = don't expand)</label>
+      <input id="plotCost" type="number" value="20000" min="0" />
+      <label>
+        <input id="reinvest" type="checkbox" checked style="width:auto" />
+        Reinvest profit into more plots
+      </label>
+    </section>
+
+    <section>
+      <div class="verdict" id="verdict">Crunching the numbers…</div>
+
+      <div class="card" style="margin-bottom:20px">
+        <h2>30-day trajectory</h2>
+        <canvas id="chart" width="800" height="240"></canvas>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <h2>Cheapest crop that hits 1M in 30 days</h2>
+        <table id="solveTable">
+          <thead><tr><th>Crop</th><th>Profit / plot / day</th><th>Plots needed</th><th>Seed capital</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="muted" style="margin:10px 0 0">"Plots needed" = how many plots of that crop, kept full, reach the target by day 30 at a constant rate.</p>
+      </div>
+
+      <div class="card">
+        <h2>Crop efficiency ranking</h2>
+        <table id="rankTable">
+          <thead><tr><th>Crop</th><th>Tier</th><th>Profit / plot / day</th><th>Seed cost</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <details>
+        <summary>Show full day-by-day table</summary>
+        <table id="dayTable" style="margin-top:12px">
+          <thead><tr><th>Day</th><th>Daily income</th><th>Plots</th><th>+Plots</th><th>Balance</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </details>
+    </section>
+  </div>
+</main>
+
+<footer>
+  Numbers are community-sourced approximations and drift with game updates — edit
+  <code>data/crops.js</code> to match the current meta. This is a planning aid, not a guarantee.
+  No affiliation with the game or its developers.
+</footer>
+
+<script src="data/crops.js"></script>
+<script src="data/engine.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Math.round(n).toLocaleString("en-US");
+const TARGET = 1_000_000, DAYS = 30;
+
+function populate() {
+  $("crop").innerHTML = GAG_CROPS
+    .map((c, i) => `<option value="${i}">${c.name} — ${fmt(c.sell)}/fruit</option>`).join("");
+  $("crop").value = GAG_CROPS.findIndex(c => c.name === "Dragon Fruit");
+  $("growth").innerHTML = GAG_MUTATIONS.growth
+    .map((m, i) => `<option value="${i}">${m.name} (×${m.mult})</option>`).join("");
+  $("env").innerHTML = `<option value="-1">None (×1)</option>` + GAG_MUTATIONS.environmental
+    .map((m, i) => `<option value="${i}">${m.name} (×${m.mult})</option>`).join("");
+}
+
+function readConfig() {
+  const cropIdx = +$("crop").value;
+  const growthIdx = +$("growth").value;
+  const envIdx = +$("env").value;
+  const envMults = envIdx >= 0 ? [GAG_MUTATIONS.environmental[envIdx].mult] : [];
+  return {
+    startBalance: +$("startBalance").value,
+    plots: Math.max(1, +$("plots").value),
+    crop: GAG_CROPS[cropIdx],
+    growthMult: GAG_MUTATIONS.growth[growthIdx].mult,
+    envMults,
+    mutationFraction: (+$("mutationFraction").value) / 100,
+    plotCost: +$("plotCost").value,
+    reinvestPlots: $("reinvest").checked,
+    target: TARGET, days: DAYS,
+  };
+}
+
+function render() {
+  const cfg = readConfig();
+  const sim = GAG.simulate(cfg);
+
+  // Verdict
+  const v = $("verdict");
+  if (sim.success) {
+    v.className = "verdict good";
+    v.innerHTML = `✅ <span class="good-t">You hit 1,000,000 on <b>day ${sim.hitDay}</b></span> ` +
+      `growing <b>${sim.crop}</b>. Final balance day 30: <b>${fmt(sim.finalBalance)}</b> ` +
+      `across ${sim.finalPlots} plots.`;
+  } else {
+    v.className = "verdict bad";
+    const need = GAG.solveForTarget(GAG_CROPS, cfg)[0];
+    const tip = need
+      ? ` Cheapest path: ~${need.plotsNeeded} plots of <b>${need.crop.name}</b> (≈${fmt(need.seedCapital)} seed capital).`
+      : "";
+    v.innerHTML = `❌ <span class="bad-t">Short of 1M by day 30.</span> ` +
+      `You reach <b>${fmt(sim.finalBalance)}</b> with ${sim.crop}.` + tip;
+  }
+
+  drawChart(sim.trajectory);
+  fillSolve(cfg);
+  fillRank(cfg);
+  fillDays(sim.trajectory);
+}
+
+function drawChart(traj) {
+  const cv = $("chart"), ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height, pad = 40;
+  ctx.clearRect(0, 0, W, H);
+  const maxBal = Math.max(TARGET, ...traj.map(t => t.balance));
+  const x = (d) => pad + (W - pad * 2) * (d - 1) / (DAYS - 1);
+  const y = (b) => H - pad - (H - pad * 2) * (b / maxBal);
+
+  // target line
+  ctx.strokeStyle = "#ffd86b"; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(pad, y(TARGET)); ctx.lineTo(W - pad, y(TARGET)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#ffd86b"; ctx.font = "11px system-ui";
+  ctx.fillText("1,000,000", pad + 4, y(TARGET) - 5);
+
+  // balance curve
+  ctx.strokeStyle = "#5fd38a"; ctx.lineWidth = 2.5; ctx.beginPath();
+  traj.forEach((t, i) => { const px = x(t.day), py = y(t.balance);
+    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  ctx.stroke();
+
+  ctx.fillStyle = "#8fae9b"; ctx.font = "11px system-ui";
+  ctx.fillText("Day 1", pad, H - pad + 16);
+  ctx.fillText("Day 30", W - pad - 30, H - pad + 16);
+}
+
+function fillSolve(cfg) {
+  const rows = GAG.solveForTarget(GAG_CROPS, cfg).slice(0, 6);
+  $("solveTable").querySelector("tbody").innerHTML = rows.map(r =>
+    `<tr><td>${r.crop.name}</td><td class="num">${fmt(r.perPlotPerDay)}</td>` +
+    `<td class="num">${fmt(r.plotsNeeded)}</td><td class="num">${fmt(r.seedCapital)}</td></tr>`).join("");
+}
+
+function fillRank(cfg) {
+  const rows = GAG.rankCrops(GAG_CROPS, cfg);
+  $("rankTable").querySelector("tbody").innerHTML = rows.map(r =>
+    `<tr><td>${r.crop.name}</td><td><span class="pill">${r.crop.tier}</span></td>` +
+    `<td class="num">${fmt(r.perPlotPerDay)}</td><td class="num">${fmt(r.crop.seed)}</td></tr>`).join("");
+}
+
+function fillDays(traj) {
+  $("dayTable").querySelector("tbody").innerHTML = traj.map(t =>
+    `<tr><td>${t.day}</td><td class="num">${fmt(t.income)}</td><td class="num">${t.plots}</td>` +
+    `<td class="num">${t.plotsBought || ""}</td><td class="num">${fmt(t.balance)}</td></tr>`).join("");
+}
+
+populate();
+document.querySelectorAll("input, select").forEach(el => {
+  el.addEventListener("input", render);
+});
+render();
+</script>
+</body>
+</html>

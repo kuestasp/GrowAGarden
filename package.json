@@ -1,0 +1,13 @@
+{
+  "name": "grow-a-garden-million-planner",
+  "version": "1.0.0",
+  "description": "Plan 1,000,000 Sheckles in 30 days in Grow a Garden — interactive planner, CLI, and simulator.",
+  "type": "commonjs",
+  "bin": { "gag-plan": "plan.js" },
+  "scripts": {
+    "test": "node test/engine.test.js",
+    "plan": "node plan.js",
+    "serve": "python3 -m http.server 8000"
+  },
+  "license": "MIT"
+}
