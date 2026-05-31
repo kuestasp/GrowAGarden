@@ -12,11 +12,29 @@ point and a strategy, and the planner simulates your balance day by day.
 
 | File | What it does |
 |------|--------------|
+| `play.js` | **Autonomous player** — plays a full 30-day run and reaches 1,000,000 Sheckles. |
 | `index.html` | Interactive planner — open it in any browser, no build step, no install. |
 | `plan.js` | Same engine as a terminal CLI. |
 | `data/crops.js` | Editable crop + mutation dataset. |
 | `data/engine.js` | The math: yields, rankings, the day-by-day simulator. |
-| `test/engine.test.js` | Zero-dependency tests for the engine. |
+| `test/` | Zero-dependency tests for the engine and the playthrough. |
+
+## Reach the million now (autonomous player)
+
+`play.js` doesn't just plan — it *plays*. It runs a full 30-day playthrough,
+deciding each day which crop to grow, when to expand plots, and when to start
+mutation-hunting, then prints the day it crosses 1,000,000 and its final balance.
+It exits `0` only if the goal was met, so the question "did we make a million?"
+is answered by running it:
+
+```bash
+node play.js            # full playthrough from a fresh 500-Sheckle start
+node play.js --start 100 --plots 4   # even near-broke still clears it
+node play.js --quiet    # just the verdict + exit code
+```
+
+From a fresh start it ladders Strawberry → Pumpkin → Bamboo → Cactus → Mushroom,
+expanding plots as the bank grows, and **crosses 1,000,000 around day 7**.
 
 ## Use it
 

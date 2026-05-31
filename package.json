@@ -5,7 +5,8 @@
   "type": "commonjs",
   "bin": { "gag-plan": "plan.js" },
   "scripts": {
-    "test": "node test/engine.test.js",
+    "test": "node test/engine.test.js && node test/play.test.js",
+    "play": "node play.js",
     "plan": "node plan.js",
     "serve": "python3 -m http.server 8000"
   },
