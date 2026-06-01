@@ -15,7 +15,9 @@ point and a strategy, and the planner simulates your balance day by day.
 | `PLAYBOOK.md` | **The human plan** — concrete day-by-day actions a real player follows in-game. |
 | `build-playbook.js` | Regenerates `PLAYBOOK.md` from the verified playthrough. |
 | `play.js` | **Autonomous player** — plays a full 30-day run and reaches 1,000,000 Sheckles. |
-| `index.html` | Interactive planner — open it in any browser, no build step, no install. |
+| `index.html` | Landing site (Deutsch) — overview, links to the game, planner & playbook. |
+| `play-garden.html` | **Playable game** — grow crops in the browser and reach 1,000,000 yourself. |
+| `planner.html` | Interactive planner — open it in any browser, no build step, no install. |
 | `plan.js` | Same engine as a terminal CLI. |
 | `data/crops.js` | Editable crop + mutation dataset. |
 | `data/engine.js` | The math: yields, rankings, the day-by-day simulator. |
@@ -51,7 +53,7 @@ node build-playbook.js
 
 ## Use it
 
-**Browser:** open `index.html` (double-click, or `python3 -m http.server` then visit
+**Browser:** open `planner.html` (double-click, or `python3 -m http.server` then visit
 `localhost:8000`). Set your starting Sheckles, plots, crop, and mutation rate; the
 verdict, chart, and tables update live.
 

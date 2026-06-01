@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grow a Garden — Reach 1,000,000 Sheckles</title>
+<style>
+  :root{
+    --bg:#0d1410;--panel:#15201a;--panel2:#1d2c23;--line:#2c4033;
+    --text:#e8f2ea;--muted:#8eae9b;--accent:#5fd38a;--gold:#ffd86b;--bad:#ff7a6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(120% 80% at 50% -10%,#1a2a20,#0d1410);
+    color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+  header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;
+    align-items:center;gap:18px;flex-wrap:wrap;background:rgba(13,20,16,.7);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+  h1{margin:0;font-size:20px}
+  .bank{margin-left:auto;text-align:right}
+  .bank .amt{font-size:26px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+  .bank .tgt{font-size:12px;color:var(--muted)}
+  .progress{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;width:100%;margin-top:6px}
+  .progress>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));width:0%}
+  main{max-width:1080px;margin:0 auto;padding:20px 22px 60px;display:grid;gap:20px;grid-template-columns:1fr 300px}
+  @media(max-width:840px){main{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h2{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .garden{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px}
+  .plot{aspect-ratio:1;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+    position:relative;user-select:none;transition:transform .05s,box-shadow .12s;overflow:hidden}
+  .plot:hover{transform:translateY(-2px)}
+  .plot:active{transform:scale(.96)}
+  .plot .emoji{font-size:30px;line-height:1;filter:grayscale(.1)}
+  .plot.empty .emoji{opacity:.25}
+  .plot.ready{box-shadow:0 0 0 2px var(--accent),0 0 16px -2px var(--accent)}
+  .plot.ready.mut{box-shadow:0 0 0 2px var(--gold),0 0 18px -2px var(--gold)}
+  .plot .bar{position:absolute;bottom:0;left:0;height:4px;background:var(--accent);width:0%}
+  .plot .tag{position:absolute;top:3px;right:5px;font-size:10px;color:var(--gold)}
+  .plot .lbl{font-size:10px;color:var(--muted);margin-top:2px}
+  .shop button,.tools button{width:100%;text-align:left;display:flex;justify-content:space-between;
+    align-items:center;gap:8px;padding:10px 12px;margin:6px 0;border-radius:10px;cursor:pointer;
+    background:var(--panel2);border:1px solid var(--line);color:var(--text);font:inherit}
+  .shop button:hover:not(:disabled),.tools button:hover:not(:disabled){border-color:var(--accent)}
+  .shop button:disabled,.tools button:disabled{opacity:.4;cursor:not-allowed}
+  .shop .name{font-weight:600}
+  .shop .sub{font-size:11px;color:var(--muted)}
+  .cost{color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .selected{outline:2px solid var(--accent)}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{font-size:11px;padding:2px 9px;border-radius:99px;background:var(--panel2);color:var(--muted)}
+  .log{font-size:12px;color:var(--muted);max-height:120px;overflow:auto}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .toolbar button{padding:7px 12px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);color:var(--text);cursor:pointer;font:inherit}
+  .toolbar button:hover{border-color:var(--accent)}
+  .hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+  .win{position:fixed;inset:0;background:rgba(8,14,10,.92);display:none;align-items:center;justify-content:center;z-index:50;text-align:center;padding:24px}
+  .win.show{display:flex}
+  .win .box{max-width:520px}
+  .win h2{font-size:34px;margin:0 0 10px;color:var(--gold)}
+  .win p{color:var(--text);font-size:18px}
+  .win button{margin-top:18px;padding:12px 22px;border-radius:12px;background:var(--accent);border:0;color:#062;font-weight:700;font-size:16px;cursor:pointer}
+  kbd{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌱 Grow a Garden</h1>
+  <span class="pill" id="dayPill">Day 1</span>
+  <span class="pill" id="plotPill">8 plots</span>
+  <div class="bank">
+    <div class="amt" id="bank">0</div>
+    <div class="tgt">of 1,000,000 Sheckles · <span id="pct">0</span>%</div>
+    <div class="progress"><div id="bar"></div></div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="card" style="margin-bottom:20px">
+      <div class="toolbar">
+        <button id="harvestAll">🧺 Harvest all (Space)</button>
+        <button id="plantAll">🌱 Plant empty (E)</button>
+        <button id="fast">⏩ Fast forward</button>
+        <button id="reset" style="margin-left:auto">↺ Reset</button>
+      </div>
+      <div class="garden" id="garden"></div>
+      <p class="hint">Click a plot to plant the selected seed, or harvest it when it's glowing. Ripe fruit sells automatically on harvest. Gold-glowing plots carry a <b>mutation</b> worth a lot more.</p>
+    </div>
+    <div class="card">
+      <h2>Activity</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+
+  <aside>
+    <div class="card shop" style="margin-bottom:20px">
+      <h2>Seed shop — click to select</h2>
+      <div id="shop"></div>
+    </div>
+    <div class="card tools">
+      <h2>Upgrades</h2>
+      <div id="upgrades"></div>
+    </div>
+  </aside>
+</main>
+
+<div class="win" id="win"><div class="box">
+  <h2>🏆 1,000,000 Sheckles!</h2>
+  <p id="winText">You did it.</p>
+  <button id="winClose">Keep playing</button>
+</div></div>
+
+<script>
+const TARGET = 1_000_000;
+const fmt = n => Math.floor(n).toLocaleString("en-US");
+
+// Seed catalogue: cost, base sell, grow seconds, multi-harvest count, emoji, unlock bank.
+const SEEDS = [
+  {id:"carrot",   name:"Carrot",      emoji:"🥕", cost:10,    sell:25,    grow:3,  harvests:1,  unlock:0},
+  {id:"straw",    name:"Strawberry",  emoji:"🍓", cost:50,    sell:18,    grow:4,  harvests:6,  unlock:0},
+  {id:"blue",     name:"Blueberry",   emoji:"🫐", cost:400,   sell:22,    grow:5,  harvests:8,  unlock:600},
+  {id:"tomato",   name:"Tomato",      emoji:"🍅", cost:800,   sell:40,    grow:6,  harvests:8,  unlock:1500},
+  {id:"water",    name:"Watermelon",  emoji:"🍉", cost:2500,  sell:3000,  grow:12, harvests:1,  unlock:4000},
+  {id:"pumpkin",  name:"Pumpkin",     emoji:"🎃", cost:3000,  sell:3900,  grow:14, harvests:1,  unlock:8000},
+  {id:"apple",    name:"Apple",       emoji:"🍎", cost:6000,  sell:550,   grow:8,  harvests:12, unlock:15000},
+  {id:"dragon",   name:"Dragon Fruit",emoji:"🐉", cost:50000, sell:4500,  grow:16, harvests:14, unlock:80000},
+  {id:"mango",    name:"Mango",       emoji:"🥭", cost:120000,sell:6200,  grow:18, harvests:16, unlock:250000},
+  {id:"mushroom", name:"Mushroom",    emoji:"🍄", cost:130000,sell:140000,grow:30, harvests:1,  unlock:400000},
+];
+const seedById = id => SEEDS.find(s=>s.id===id);
+
+const MUT = [
+  {name:"Gold",    mult:20,  chance:1,    color:"#ffd86b"},
+  {name:"Rainbow", mult:50,  chance:.35,  color:"#ff8ad8"},
+  {name:"Frozen",  mult:10,  chance:.6,   color:"#8ad6ff"},
+];
+
+const DEFAULT = () => ({
+  bank:0, plots:8, day:1, started:Date.now(),
+  selected:"carrot",
+  mutChance:0.04, sellMult:1, growMult:1, plotCost:2000,
+  garden:Array.from({length:8},()=>null), // each: {seed, plantedAt, mut}
+  log:[],
+});
+let S = load() || DEFAULT();
+
+function load(){ try{return JSON.parse(localStorage.getItem("gag-save"))}catch(e){return null} }
+function save(){ localStorage.setItem("gag-save", JSON.stringify(S)); }
+
+function logMsg(m){ S.log.unshift(`<div>• ${m}</div>`); S.log=S.log.slice(0,40); }
+
+// ---- core mechanics ----
+function plant(i, seedId){
+  const s = seedById(seedId);
+  if(!s || S.bank < s.cost) return false;
+  S.bank -= s.cost;
+  const mut = Math.random() < S.mutChance ? rollMutation() : null;
+  S.garden[i] = {seed:seedId, plantedAt:now(), mut, harvestsLeft:s.harvests};
+  return true;
+}
+function rollMutation(){
+  // pick the rarest mutation that passes its chance roll, else Gold
+  for(const m of [...MUT].sort((a,b)=>b.mult-a.mult)){
+    if(Math.random() < m.chance) return m.name;
+  }
+  return "Gold";
+}
+function now(){ return Date.now()/1000; }
+
+function growthFrac(cell){
+  const s = seedById(cell.seed);
+  const g = s.grow * S.growMult;
+  return Math.min(1,(now()-cell.plantedAt)/g);
+}
+function isReady(cell){ return cell && growthFrac(cell)>=1; }
+
+function harvest(i){
+  const cell = S.garden[i];
+  if(!isReady(cell)) return 0;
+  const s = seedById(cell.seed);
+  let value = s.sell * S.sellMult;
+  if(cell.mut){ value *= (MUT.find(m=>m.name===cell.mut)?.mult||1); }
+  S.bank += value;
+  cell.harvestsLeft -= 1;
+  if(cell.harvestsLeft > 0){
+    // regrowing crop: replant timer, keep mutation chance fresh
+    cell.plantedAt = now();
+    cell.mut = Math.random() < S.mutChance ? rollMutation() : null;
+  } else {
+    S.garden[i] = null;
+  }
+  logMsg(`Sold ${cell.mut?`<b style="color:var(--gold)">${cell.mut} </b>`:""}${s.emoji} ${s.name} for ${fmt(value)}`);
+  checkWin();
+  return value;
+}
+
+function buyPlot(){
+  if(S.bank < S.plotCost) return;
+  S.bank -= S.plotCost;
+  S.plots += 1;
+  S.garden.push(null);
+  S.plotCost = Math.ceil(S.plotCost * 1.18);
+  logMsg(`Bought a plot — now ${S.plots} plots`);
+}
+
+const UPGRADES = [
+  {id:"sprinkler", name:"💧 Sprinkler", sub:"+grow speed 25%", baseCost:5000, apply:()=>{S.growMult*=0.8;}, max:6},
+  {id:"market",    name:"📈 Better market", sub:"+15% sell price", baseCost:12000, apply:()=>{S.sellMult*=1.15;}, max:10},
+  {id:"weather",   name:"🌈 Weather machine", sub:"+5% mutation chance", baseCost:25000, apply:()=>{S.mutChance=Math.min(.8,S.mutChance+0.05);}, max:14},
+];
+S.upgradeLevels = S.upgradeLevels || {};
+function upgCost(u){ return Math.ceil(u.baseCost * Math.pow(1.6,(S.upgradeLevels[u.id]||0))); }
+function buyUpgrade(u){
+  const lvl = S.upgradeLevels[u.id]||0;
+  if(lvl>=u.max || S.bank<upgCost(u)) return;
+  S.bank -= upgCost(u);
+  u.apply();
+  S.upgradeLevels[u.id]=lvl+1;
+  logMsg(`Upgraded ${u.name} → Lv ${lvl+1}`);
+}
+
+let won=false;
+function checkWin(){
+  if(!won && S.bank>=TARGET){
+    won=true;
+    const days = Math.max(1,Math.ceil((Date.now()-S.started)/(1000*60*60*24)) );
+    document.getElementById("winText").innerHTML =
+      `You grew your way to <b style="color:var(--gold)">${fmt(S.bank)} Sheckles</b>. Goal: 1,000,000. 🌻`;
+    document.getElementById("win").classList.add("show");
+    logMsg(`🏆 Reached 1,000,000 Sheckles!`);
+  }
+}
+
+// ---- rendering ----
+const $=id=>document.getElementById(id);
+function render(){
+  $("bank").textContent = fmt(S.bank);
+  const pct = Math.min(100, S.bank/TARGET*100);
+  $("pct").textContent = pct.toFixed(pct<1?2:0);
+  $("bar").style.width = pct+"%";
+  $("plotPill").textContent = S.plots+" plots";
+  $("dayPill").textContent = "Day "+S.day;
+
+  // garden
+  const g=$("garden"); g.innerHTML="";
+  S.garden.forEach((cell,i)=>{
+    const d=document.createElement("div");
+    d.className="plot"+(cell?"":" empty");
+    if(cell){
+      const s=seedById(cell.seed);
+      const frac=growthFrac(cell);
+      const ready=frac>=1;
+      if(ready) d.classList.add("ready");
+      if(ready&&cell.mut) d.classList.add("mut");
+      d.innerHTML=`<div class="emoji">${s.emoji}</div>`+
+        `<div class="lbl">${ready?(cell.mut?cell.mut:"ready"):Math.floor(frac*100)+"%"}</div>`+
+        (cell.mut?`<div class="tag">✦</div>`:"")+
+        `<div class="bar" style="width:${frac*100}%"></div>`;
+    } else {
+      const sel=seedById(S.selected);
+      d.innerHTML=`<div class="emoji">${sel?sel.emoji:"➕"}</div><div class="lbl">empty</div>`;
+    }
+    d.onclick=()=>{ if(cell){ if(isReady(cell)) harvest(i); } else { plant(i,S.selected); } save(); render(); };
+    g.appendChild(d);
+  });
+
+  // shop
+  const shop=$("shop"); shop.innerHTML="";
+  SEEDS.forEach(s=>{
+    const locked = S.bank < s.unlock && !S.everUnlocked?.[s.id];
+    if(S.bank>=s.unlock){ S.everUnlocked=S.everUnlocked||{}; S.everUnlocked[s.id]=true; }
+    const unlocked = S.everUnlocked?.[s.id] || s.unlock===0;
+    const b=document.createElement("button");
+    b.disabled = !unlocked;
+    if(S.selected===s.id) b.classList.add("selected");
+    b.innerHTML=`<span><span class="name">${s.emoji} ${unlocked?s.name:"???"}</span>`+
+      `<span class="sub">${unlocked?`sell ~${fmt(s.sell)}${s.harvests>1?` ×${s.harvests}`:""} · ${s.grow}s`:`unlocks at ${fmt(s.unlock)}`}</span></span>`+
+      `<span class="cost">${unlocked?fmt(s.cost):"🔒"}</span>`;
+    b.onclick=()=>{ if(unlocked){ S.selected=s.id; save(); render(); } };
+    shop.appendChild(b);
+  });
+
+  // upgrades
+  const up=$("upgrades"); up.innerHTML="";
+  const plotBtn=document.createElement("button");
+  plotBtn.disabled=S.bank<S.plotCost;
+  plotBtn.innerHTML=`<span><span class="name">➕ Buy plot</span><span class="sub">expand your garden</span></span><span class="cost">${fmt(S.plotCost)}</span>`;
+  plotBtn.onclick=()=>{buyPlot();save();render();};
+  up.appendChild(plotBtn);
+  UPGRADES.forEach(u=>{
+    const lvl=S.upgradeLevels[u.id]||0;
+    const b=document.createElement("button");
+    b.disabled=lvl>=u.max||S.bank<upgCost(u);
+    b.innerHTML=`<span><span class="name">${u.name} <span class="pill">Lv ${lvl}</span></span><span class="sub">${u.sub}</span></span>`+
+      `<span class="cost">${lvl>=u.max?"MAX":fmt(upgCost(u))}</span>`;
+    b.onclick=()=>{buyUpgrade(u);save();render();};
+    up.appendChild(b);
+  });
+
+  $("log").innerHTML=S.log.join("");
+}
+
+// ---- actions ----
+function harvestAll(){ let any=false; S.garden.forEach((c,i)=>{ if(isReady(c)){harvest(i);any=true;} }); if(any){save();render();} }
+function plantAll(){ let any=false; S.garden.forEach((c,i)=>{ if(!c && plant(i,S.selected)){any=true;} }); if(any){save();render();} }
+
+$("harvestAll").onclick=harvestAll;
+$("plantAll").onclick=plantAll;
+$("fast").onclick=()=>{ // advance every planted crop's timer by its full grow time
+  S.garden.forEach(c=>{ if(c){ const s=seedById(c.seed); c.plantedAt-=s.grow*S.growMult; } });
+  S.day=Math.min(30,S.day+1); save(); render();
+};
+$("reset").onclick=()=>{ if(confirm("Reset your garden and Sheckles?")){ localStorage.removeItem("gag-save"); S=DEFAULT(); won=false; save(); render(); } };
+$("winClose").onclick=()=>$("win").classList.remove("show");
+
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space"){e.preventDefault();harvestAll();}
+  if(e.key.toLowerCase()==="e"){plantAll();}
+});
+
+// auto-plant a starter so the player isn't staring at dirt
+if(S.garden.every(c=>c===null) && S.bank===0 && (S.log||[]).length===0){
+  S.bank=80; for(let i=0;i<4;i++) plant(i,"carrot"); logMsg("Welcome! Harvest glowing plots and reinvest. Reach 1,000,000 Sheckles.");
+  save();
+}
+
+setInterval(()=>{ render(); save(); }, 250);
+render();
+</script>
+</body>
+</html>
