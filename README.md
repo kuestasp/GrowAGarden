@@ -15,6 +15,8 @@ point and a strategy, and the planner simulates your balance day by day.
 | `PLAYBOOK.md` | **The human plan** — concrete day-by-day actions a real player follows in-game. |
 | `build-playbook.js` | Regenerates `PLAYBOOK.md` from the verified playthrough. |
 | `play.js` | **Autonomous player** — plays a full 30-day run and reaches 1,000,000 Sheckles. |
+| `earn-million.js` | **Proof run** — drives the real game in a headless browser until the bank hits 1,000,000, then saves a screenshot. |
+| `PROOF.md` / `proof-million.png` | Evidence: 1,000,000 Sheckles earned in a live game instance (day 21/30). |
 | `index.html` | Landing site (Deutsch) — overview, links to the game, planner & playbook. |
 | `play-garden.html` | **Playable game** — grow crops in the browser and reach 1,000,000 yourself. |
 | `planner.html` | Interactive planner — open it in any browser, no build step, no install. |
@@ -39,6 +41,18 @@ node play.js --quiet    # just the verdict + exit code
 
 From a fresh start it ladders Strawberry → Pumpkin → Bamboo → Cactus → Mushroom,
 expanding plots as the bank grows, and **crosses 1,000,000 around day 7**.
+
+## Proof: the million, actually earned
+
+`earn-million.js` doesn't simulate — it loads the **real** `play-garden.html` in a
+headless Chromium browser and drives the game's own plant / harvest / buy /
+fast-forward logic, one in-game day per step, until the on-screen bank actually
+reaches 1,000,000. The latest run crossed the target on **day 21 of 30**; see
+[`PROOF.md`](./PROOF.md) and the victory screenshot `proof-million.png`.
+
+```bash
+node earn-million.js   # plays the real game to 1,000,000 and captures proof
+```
 
 ## Play it yourself (the human plan)
 

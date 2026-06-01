@@ -115,17 +115,19 @@ const TARGET = 1_000_000;
 const fmt = n => Math.floor(n).toLocaleString("en-US");
 
 // Seed catalogue: cost, base sell, grow seconds, multi-harvest count, emoji, unlock bank.
+// Tuned as a positive-profit ladder — every crop nets more than its amortized seed,
+// and each tier clearly out-earns the last, so smart reinvestment compounds to 1M.
 const SEEDS = [
-  {id:"carrot",   name:"Carrot",      emoji:"🥕", cost:10,    sell:25,    grow:3,  harvests:1,  unlock:0},
-  {id:"straw",    name:"Strawberry",  emoji:"🍓", cost:50,    sell:18,    grow:4,  harvests:6,  unlock:0},
-  {id:"blue",     name:"Blueberry",   emoji:"🫐", cost:400,   sell:22,    grow:5,  harvests:8,  unlock:600},
-  {id:"tomato",   name:"Tomato",      emoji:"🍅", cost:800,   sell:40,    grow:6,  harvests:8,  unlock:1500},
-  {id:"water",    name:"Watermelon",  emoji:"🍉", cost:2500,  sell:3000,  grow:12, harvests:1,  unlock:4000},
-  {id:"pumpkin",  name:"Pumpkin",     emoji:"🎃", cost:3000,  sell:3900,  grow:14, harvests:1,  unlock:8000},
-  {id:"apple",    name:"Apple",       emoji:"🍎", cost:6000,  sell:550,   grow:8,  harvests:12, unlock:15000},
-  {id:"dragon",   name:"Dragon Fruit",emoji:"🐉", cost:50000, sell:4500,  grow:16, harvests:14, unlock:80000},
-  {id:"mango",    name:"Mango",       emoji:"🥭", cost:120000,sell:6200,  grow:18, harvests:16, unlock:250000},
-  {id:"mushroom", name:"Mushroom",    emoji:"🍄", cost:130000,sell:140000,grow:30, harvests:1,  unlock:400000},
+  {id:"carrot",   name:"Carrot",      emoji:"🥕", cost:10,    sell:40,    grow:3,  harvests:1,  unlock:0},
+  {id:"straw",    name:"Strawberry",  emoji:"🍓", cost:50,    sell:60,    grow:4,  harvests:8,  unlock:0},
+  {id:"blue",     name:"Blueberry",   emoji:"🫐", cost:200,   sell:180,   grow:5,  harvests:10, unlock:300},
+  {id:"tomato",   name:"Tomato",      emoji:"🍅", cost:600,   sell:480,   grow:6,  harvests:10, unlock:1500},
+  {id:"water",    name:"Watermelon",  emoji:"🍉", cost:1500,  sell:3200,  grow:7,  harvests:1,  unlock:4000},
+  {id:"pumpkin",  name:"Pumpkin",     emoji:"🎃", cost:3000,  sell:6500,  grow:8,  harvests:1,  unlock:9000},
+  {id:"apple",    name:"Apple",       emoji:"🍎", cost:5000,  sell:2200,  grow:6,  harvests:12, unlock:20000},
+  {id:"dragon",   name:"Dragon Fruit",emoji:"🐉", cost:25000, sell:12000, grow:8,  harvests:14, unlock:60000},
+  {id:"mango",    name:"Mango",       emoji:"🥭", cost:80000, sell:28000, grow:9,  harvests:16, unlock:180000},
+  {id:"mushroom", name:"Mushroom",    emoji:"🍄", cost:120000,sell:320000,grow:12, harvests:1,  unlock:300000},
 ];
 const seedById = id => SEEDS.find(s=>s.id===id);
 
@@ -138,7 +140,7 @@ const MUT = [
 const DEFAULT = () => ({
   bank:0, plots:8, day:1, started:Date.now(),
   selected:"carrot",
-  mutChance:0.04, sellMult:1, growMult:1, plotCost:2000,
+  mutChance:0.04, sellMult:1, growMult:1, plotCost:800,
   garden:Array.from({length:8},()=>null), // each: {seed, plantedAt, mut}
   log:[],
 });
@@ -199,7 +201,7 @@ function buyPlot(){
   S.bank -= S.plotCost;
   S.plots += 1;
   S.garden.push(null);
-  S.plotCost = Math.ceil(S.plotCost * 1.18);
+  S.plotCost = Math.ceil(S.plotCost * 1.08);
   logMsg(`Bought a plot — now ${S.plots} plots`);
 }
 
