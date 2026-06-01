@@ -12,6 +12,8 @@ point and a strategy, and the planner simulates your balance day by day.
 
 | File | What it does |
 |------|--------------|
+| `PLAYBOOK.md` | **The human plan** — concrete day-by-day actions a real player follows in-game. |
+| `build-playbook.js` | Regenerates `PLAYBOOK.md` from the verified playthrough. |
 | `play.js` | **Autonomous player** — plays a full 30-day run and reaches 1,000,000 Sheckles. |
 | `index.html` | Interactive planner — open it in any browser, no build step, no install. |
 | `plan.js` | Same engine as a terminal CLI. |
@@ -35,6 +37,17 @@ node play.js --quiet    # just the verdict + exit code
 
 From a fresh start it ladders Strawberry → Pumpkin → Bamboo → Cactus → Mushroom,
 expanding plots as the bank grows, and **crosses 1,000,000 around day 7**.
+
+## Play it yourself (the human plan)
+
+The simulator proves the route; **[`PLAYBOOK.md`](./PLAYBOOK.md)** is how *you* run
+it in the live game — phase-by-phase crops, a daily login routine, mutation-hunting
+tips, and pace checkpoints ("by day 7 you should have ~1.8M, ~43 plots"). Follow it
+in-game to actually bank the million. Regenerate it any time from the verified run:
+
+```bash
+node build-playbook.js
+```
 
 ## Use it
 
